@@ -1,9 +1,11 @@
 #include < Cdfdf>
 #include <../q >
 #include < a>
-<Test class = '\asd>cls' name = B H>
-dd fdf
-<A data = '<><><><//\\233' pp = sd>
-asddsbb
-</A>
+<Test class = '123'>
+a#if a > b
+#elif c < d
+#else
+#endif
+#for i in [1,2,3]
+#endfor
 </Test>

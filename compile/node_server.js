@@ -59,10 +59,10 @@ class TNode extends Node {
 
 //variable node
 class VNode extends Node {
-    constructor (value) {
+    constructor (name) {
         super()
         this.nodeType = Node.VARIABLE_NODE
-        this.value = value
+        this.name = name
     }
 }
 

@@ -125,8 +125,9 @@ class Parser {
         temp.push(JSON.stringify(this.str.slice(index, this.index)).slice(1, -1))
         if (!this.eof) temp.push(this.seek_token(true, false, ''))
         temp.push('\n\t')
-        while (front--)
+        while (front--) {
             temp.push(' ')
+        }
         temp.push('^')
 
         throw new SyntaxError(temp.join(''))

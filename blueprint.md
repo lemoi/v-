@@ -46,9 +46,22 @@ did_unload 卸载的时候调用
 ```
 Meta元节点
 1. #inlcude
+eg:
+#include <A>
+
 2. #for
+eg:
+#for k,v in obj
+#endfor
+
 3. #if
-4. #define ?
+#if condition
+#elif condtion
+#else 
+#endif
+
+4. #define
+#define A expression
 
 Node节点
 DNode  dom节点

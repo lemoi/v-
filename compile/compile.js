@@ -10,17 +10,33 @@ function get_i (array_like, index) {
     return array_like[index]
 }
 
-const KEY_WORD = "<>/=#\\"
+const META = ['for', 'include', 'if', 'elif', 'else', 'endif', 'endfor']
+
+const KEY_WORD_INCLUDE = '<>'
+const KEY_WORD_NODE = '<>=/'
+const KEY_WORD_TEXT = '#<>\\'
+const KEY_WORD_NORMAL_META = ''
 
 const QUOT = "\'\""
+
+const REG_VARIABLE = /^[\$_a-zA-Z][\$\w_]*$/
+
+function is_vaild_var(variable) {
+    return REG_VARIABLE.test(variable)
+}
 
 function is_qt (chr) {
     return QUOT.indexOf(chr) != -1
 }
-
+//just use for node parse
 function is_kw (chr) {
-    return KEY_WORD.indexOf(chr) != -1
+    return KEY_WORD_NODE.indexOf(chr) != -1
 }
+
+function is_meta (w) {
+    return META.indexOf(w) != -1
+}
+
 //compile and return ast
 function compile (file) {
     try {
@@ -46,7 +62,7 @@ function compile (file) {
 
     const err = (what) => parser.error(what)
 
-    parser.set_kw('<>')
+    parser.set_kw(KEY_WORD_INCLUDE)
 
     //handle include
     let word = seek(), include_list = []
@@ -71,11 +87,11 @@ function compile (file) {
     }
     //end include
 
-    parser.set_kw(KEY_WORD)
     let stack = [], current_scope = null
-    stack.push(current_scope)
+    stack.children = stack
+    stack.push(stack)
 
-    function handle_node(node_constructor) {
+    function handle_node (node_constructor) {
         let node, node_name, self_close = false
         pick() // escape '<'
         if (is_kw(seek())) err()
@@ -101,8 +117,8 @@ function compile (file) {
                         pick()
                         continue
                     } else if (!is_kw(chr)) {
-                            node.set_param(word, new VNode(pt()))
-                            continue
+                        node.set_param(word, new VNode(pt()))
+                        continue
                     }
                 } else {
                     node.set_param(word)
@@ -119,46 +135,146 @@ function compile (file) {
         }
         return node
     }
+
+    function handle_meta () {
+        let meta = st()
+        if (meta == 'define') {
+            pt()
+            let field = st()
+            if (is_vaild_var(field)) {
+                pt()
+                let def = new DefineMeta(field, pt())
+                current_scope.push(def)
+                current_scope = def.scope
+                return
+            }
+        } else if (meta == 'for') {
+            pt()
+            let field = st(true, true, [','])
+            if (is_vaild_var(field)) {
+                pt(true, true, [','])
+                if (seek() == ',') {
+                    pick()
+                    if (is_vaild_var(st()))
+                        field = [field, pt()]
+                    else
+                        err()
+                }
+                if (st() == 'in') {
+                    pt()
+                    let f = new ForMeta(field, pt(false, true, Parser.LE))
+                    current_scope.push(f)
+                    current_scope = f.scope
+                    stack.push(f)
+                    return
+                }
+            }
+        } else if (meta == 'if') {
+            pt()
+            let i = new IfMeta(pt(false, true, Parser.LE))
+            current_scope.push(i)
+            current_scope = i.scope
+            stack.push(i)
+            return    
+        } else if (meta == 'else') {
+            let i = get_i(stack, -1)
+            if ('metaName' in i && i.metaName == 'if') {
+                pt()
+                i.add_branch()
+                current_scope = i.scope
+                return
+            } else {
+                err('error else')
+            }
+        } else if (meta == 'elif') {
+            let i = get_i(stack, -1)
+            if ('metaName' in i && i.metaName == 'if') {
+                pt()
+                i.add_branch(pt(false, true, Parser.LE))
+                current_scope = i.scope
+                return
+            } else {
+                err('error elif')
+            }
+        } else if (meta == 'endif') {
+            let i = stack.pop()
+            if ('metaName' in i && i.metaName == 'if') {
+                pt()
+                reset_current_scope()
+                return
+            } else {
+                err('miss match endif')
+            }            
+        } else if (meta == 'endfor') {
+            let f = stack.pop()
+            if ('metaName' in f && f.metaName == 'for') {
+                pt()
+                reset_current_scope()
+                return
+            } else {
+                err('miss match endfor')
+            }        
+        } else if (meta == 'include') {
+            err('not allowed include')
+        }
+        err()
+    }
+
+    function reset_current_scope () {
+        let parent = get_i(stack, -1)
+        current_scope = 'children' in parent ? parent.children : parent.scope
+    }
+
     //handle define
     let dnode = handle_node(DNode)
     //end define
 
     while (!parser.eof) {
         word = seek(false, false)
-        if (word == '<') {
+        if (word == '\\') {
+            pick()
+            current_scope.push(new TNode(pick(false, false)))
+            continue
+        } else if (word == '<') {
+            parser.set_kw(KEY_WORD_NODE)
             if (parser.seek(2) != '/') {
                 handle_node(ENode)
                 continue
             } else {
                 pick(); pick()
                 word = pt()
-                if (stack.pop().nodeName != word)
-                   err('miss match <' + word + '>')
-                current_scope = get_i(stack, -1)
-                if (current_scope)
-                   current_scope = current_scope.children
+                let node = stack.pop()
+                if ('nodeName' in node && node.nodeName == word)
+                    reset_current_scope()
+                else
+                    err('miss match ' + word)
                 if (pick() == '>') continue
             }
         } else if (word == '#') {
-            // pick()
-            // word = gw()
-            // if (word == 'if') {
-            //     new IfMeta()
-            //     stack..push()
-            // } else if (word == 'for') {
-
-            // } else if (word == 'define') {
-            //     err('the #define will come soon')
-            // } else if (word.startsWith('end')) {
-            //     word = word.slice(3)
-            // }
+            pick()
+            parser.set_kw(KEY_WORD_NORMAL_META)
+            if (is_vaild_var(seek(false, false))) {
+                if (is_meta(st())) {
+                    handle_meta()
+                    continue
+                } else {
+                    let v = pt(true, false, '#')
+                    if (is_vaild_var(v) && seek(false, false) == '#') {
+                        current_scope.push(new VNode(v))
+                        pick()
+                        continue
+                    }
+                }
+            }
         } else {
+            parser.set_kw(KEY_WORD_TEXT)
             word = pt(false, false)
             current_scope.push(new TNode(word))
             continue
         }
         err()
     }
-    return dnode
+    return [include_list, dnode]
 }
-console.log(compile('./test.vpp').children[1].children)
+
+module.exports = compile
