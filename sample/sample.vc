@@ -1,0 +1,44 @@
+/*
+@file           d:workspace/repository/vpp/module_name
+@date_m         2016-12-10
+@date_vm        2016-12-10
+@include        d:workspace/repository/vpp/A
+@producer       vpp@0.1.0
+*/
+
+import Vpp from 'vpp-position'
+import A from './A'
+
+class Dock_m extends Vpp{
+    constructor () {
+        super()
+        this.i = 0
+    }
+
+    b_click () {
+        this.i = 10
+        this.update()
+    }
+}
+
+function Dock_vm () {
+    return new ViewModel({n: [1, 2]},
+    [new Value(function () {
+        return !(this.get('i')>1)?"Hi, come here":"Hi, see you agin"
+    }),
+    new Element('div', 
+    {onClick:new Value(function ()
+    {return this.get('b_click')})}),
+    new For(['i'], new Value(function(){
+    return this.get('n')}), [new A({date:'2016-12-10'},
+    id: new Value(function(){this.get('i')}))]
+    )])
+}
+
+export default function Dock () {
+    let m = new Dock_m();
+    let vm = new Dock_vm();
+    m.__vm__ = vm;
+    vm.__m__ = m;
+    return m;
+}

@@ -68,3 +68,50 @@ DNode  dom节点
 SNode  字符串节点
 VNode  变量节点
 ```
+
+###after compile
+```
+//module_name.vc
+================================
+class_t date : 2016-12-10
+view_t date : 2016-12-10
+include: A, B, C
+================================
+const module_name =
+{   
+    init: function () {
+        let class_t = 
+        let instance = new
+        return 
+    },
+    class_t: ,
+}
+```
+
+#f()#
+#a ? 1 : 2#
+#a +-*/ 1#
+#"\""#
+
+expression
+
+scope
+
+get = function (name) {
+   let scope = this.scope 
+   while (scope !== null)
+        if (scope.has(name)) {
+            return scope.value(name)        
+            break
+        }
+        scope = scope.scope     
+}
+
+//hard code
+value = function () {
+    this.get('v') ? 1 : 2
+||  this.get('v') +-*/ 1
+||  {a: this.get('v')}
+||  "\""
+||  [this.get('v')]
+}

@@ -1,13 +1,12 @@
 const  { NotImplement } = require('../def.js')
+const { Meta } = require('./meta.js')
 
 class Node {
-    init () { throw NotImplement }
-
-    serialize () { throw NotImplement }
+    pack () { throw NotImplement }
 }
 
 Node.ELEMENT_NODE = 1
-Node.VARIABLE_NODE = 2
+Node.VALUEABLE_NODE = 2
 Node.TEXT_NODE = 3
 Node.DEFINITION_NODE = 4
 
@@ -33,15 +32,13 @@ class ENode extends Node {
         this.nodeType = Node.ELEMENT_NODE
         this.children = []
         this.nodeName = name
-        this.parameters = {}
+        this.attributes = {}
     }
 
     set_param (name, value = null) {
-        this.parameters[name] = value
+        this.attributes[name] = value
     }
 
-    serialize () {
-    }
 }
 
 //text node 
@@ -51,18 +48,14 @@ class TNode extends Node {
         this.nodeType = Node.TEXT_NODE
         this.value = value
     }
-
-    serialize () {
-    
-    }
 }
 
-//variable node
+//valueable node
 class VNode extends Node {
-    constructor (name) {
+    constructor (tokens) {
         super()
         this.nodeType = Node.VARIABLE_NODE
-        this.name = name
+        this.tokens = token
     }
 }
 

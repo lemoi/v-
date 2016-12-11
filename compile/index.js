@@ -1,8 +1,9 @@
 const Parser = require('./parser.js')
 const fs = require('fs')
 const { FileNotFound } = require('../def.js')
-const { ForMeta, IncludeMeta, IfMeta, DefineMeta } = require('./meta_server.js')
-const { DNode, TNode, VNode, ENode } = require('./node_server.js')
+const { ForMeta, IncludeMeta, IfMeta, DefineMeta } = require('./meta.js')
+const { DNode, TNode, VNode, ENode } = require('./node.js')
+const { TString, TNumber, TVariable } = require('./expression.js')
 
 function get_i (array_like, index) {
     if (index < 0) 
@@ -20,9 +21,15 @@ const KEY_WORD_NORMAL_META = ''
 const QUOT = "\'\""
 
 const REG_VARIABLE = /^[\$_a-zA-Z][\$\w_]*$/
+const REG_NUMBER = /^\d+$/
+const KEY_WORD_EXPRESSION = ':?="\'()+-*/.{}[]#,&|!~<>'
 
-function is_vaild_var(variable) {
-    return REG_VARIABLE.test(variable)
+function is_vaild_var (token){
+    return REG_VARIABLE.test(token)
+}
+
+function is_vaild_number (token) {
+    return REG_NUMBER.test(token)
 }
 
 function is_qt (chr) {
@@ -37,6 +44,10 @@ function is_meta (w) {
     return META.indexOf(w) != -1
 }
 
+function is_e_kw (chr) {
+    return KEY_WORD_EXPRESSION.indexOf(chr) != -1
+}
+
 //compile and return ast
 function compile (file) {
     try {
@@ -47,7 +58,7 @@ function compile (file) {
 
     const parser = new Parser(data, file)
 
-    //read a token
+    //pick a token
     const pt = (stop_at_space = true, ignore_fspace = true, kw = null) => 
                 parser.pick_token(stop_at_space, ignore_fspace, kw)
     
@@ -61,6 +72,50 @@ function compile (file) {
                 parser.seek(1, ignore_space, ignore_breakline)
 
     const err = (what) => parser.error(what)
+
+    //pick string
+    const ps = function (chr) {
+        let t = pt(false, false, chr), buffer = [t]
+        while (get_i(t, -1) == '\\' && get_i(t, -2) != '\\') {
+            pick()
+            t = pt(false, false, chr)
+            buffer.push(chr, t)
+        }
+        return buffer.join('')
+    }
+
+    //pick expression and tokenize 
+    const pe = function (end) {
+        let buffer = [], token;
+        while (true) {
+            let k = seek(true, false)
+            if (end.indexOf(k) != -1) {
+                break
+            } else if (is_qt(k)){
+                pick()
+                buffer.push(new TString(ps(k)))
+                pick()
+            } else if (k == '{'){
+                pick()
+                buffer.push(k)
+                if (is_qt(seek())) continue
+                buffer.push(new TString(pt(true, true, KEY_WORD_EXPRESSION)))
+                if (seek() != ':') err()
+            } else if (is_e_kw(k)) {
+                pick()
+                buffer.push(k)
+            } else {
+                token = pt(true, true, KEY_WORD_EXPRESSION)
+                if (is_vaild_number(token))
+                    buffer.push(new TNumber(token))
+                else if (is_vaild_var(token))
+                    buffer.push(new TVariable(token))
+                else 
+                    err()
+            } 
+        }
+        return buffer
+    }
 
     parser.set_kw(KEY_WORD_INCLUDE)
 
@@ -91,13 +146,15 @@ function compile (file) {
     stack.children = stack
     stack.push(stack)
 
-    function handle_node (node_constructor) {
+    function handle_node (is_dnode = false) {
         let node, node_name, self_close = false
         pick() // escape '<'
         if (is_kw(seek())) err()
         node_name = word = pt()
-        node = new node_constructor(node_name)
-
+        if (is_dnode) 
+            node = new DNode(node_name)
+        else 
+            node = new ENode(node_name) 
         while(seek() != '>') {
             let chr = seek()
             if (chr == '/') {
@@ -112,14 +169,22 @@ function compile (file) {
                     let chr = seek()
                     if (is_qt(chr)) {
                         pick()
-                        let value = pt(false, true, chr)
-                        node.set_param(word, new TNode(value))
+                        node.set_param(word, new TNode(ps(chr)))
                         pick()
-                        continue
+                    } else if (chr == '#') {
+                        pick()
+                        node.set_param(word, new VNode(pe('#')))
+                        pick()
                     } else if (!is_kw(chr)) {
-                        node.set_param(word, new VNode(pt()))
-                        continue
+                        let token = pt()
+                        if (is_vaild_var(token))
+                            node.set_param(word, new VNode([new TVariable(token)]))
+                        else if (is_vaild_number(token))
+                            node.set_param(word, new VNode([new TNumber(token)]))
+                        else
+                            err()
                     }
+                    continue
                 } else {
                     node.set_param(word)
                     continue
@@ -162,18 +227,18 @@ function compile (file) {
                 }
                 if (st() == 'in') {
                     pt()
-                    let f = new ForMeta(field, pt(false, true, Parser.LE))
+                    let f = new ForMeta(field, new VNode(pe(Parser.LE)))
                     current_scope.push(f)
-                    current_scope = f.scope
+                    current_scope = f.children
                     stack.push(f)
                     return
                 }
             }
         } else if (meta == 'if') {
             pt()
-            let i = new IfMeta(pt(false, true, Parser.LE))
+            let i = new IfMeta(new VNode(pe(Parser.LE)))
             current_scope.push(i)
-            current_scope = i.scope
+            current_scope = i.children
             stack.push(i)
             return    
         } else if (meta == 'else') {
@@ -181,7 +246,7 @@ function compile (file) {
             if ('metaName' in i && i.metaName == 'if') {
                 pt()
                 i.add_branch()
-                current_scope = i.scope
+                current_scope = i.children
                 return
             } else {
                 err('error else')
@@ -190,8 +255,8 @@ function compile (file) {
             let i = get_i(stack, -1)
             if ('metaName' in i && i.metaName == 'if') {
                 pt()
-                i.add_branch(pt(false, true, Parser.LE))
-                current_scope = i.scope
+                i.add_branch(pe(Parser.LE))
+                current_scope = i.children
                 return
             } else {
                 err('error elif')
@@ -221,12 +286,11 @@ function compile (file) {
     }
 
     function reset_current_scope () {
-        let parent = get_i(stack, -1)
-        current_scope = 'children' in parent ? parent.children : parent.scope
+        current_scope = get_i(stack, -1).children
     }
 
     //handle define
-    let dnode = handle_node(DNode)
+    let dnode = handle_node(true)
     //end define
 
     while (!parser.eof) {
@@ -238,7 +302,7 @@ function compile (file) {
         } else if (word == '<') {
             parser.set_kw(KEY_WORD_NODE)
             if (parser.seek(2) != '/') {
-                handle_node(ENode)
+                handle_node()
                 continue
             } else {
                 pick(); pick()
@@ -253,18 +317,13 @@ function compile (file) {
         } else if (word == '#') {
             pick()
             parser.set_kw(KEY_WORD_NORMAL_META)
-            if (is_vaild_var(seek(false, false))) {
-                if (is_meta(st())) {
-                    handle_meta()
-                    continue
-                } else {
-                    let v = pt(true, false, '#')
-                    if (is_vaild_var(v) && seek(false, false) == '#') {
-                        current_scope.push(new VNode(v))
-                        pick()
-                        continue
-                    }
-                }
+            if (is_meta(st())) {
+                handle_meta()
+                continue
+            } else {
+                current_scope.push(new VNode(pe('#')))
+                pick()
+                continue
             }
         } else {
             parser.set_kw(KEY_WORD_TEXT)
