@@ -2,6 +2,7 @@ class Scope {}
 
 class Define extends Scope{
     constructor (field, children) {
+        super()
         this.field = field
         this.children = children
     }
@@ -9,6 +10,7 @@ class Define extends Scope{
 
 class For extends Scope {
     constructor (field, obj, children) {
+        super()
         this.field = field
         this.children = children
         this.obj = obj
@@ -17,6 +19,7 @@ class For extends Scope {
 
 class ViewModel extends Scope {
     constructor (parameters, children) {
+        super()
         if (children === undefined) {
             this.parameters = null
             children = parameters

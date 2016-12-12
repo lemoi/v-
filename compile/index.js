@@ -255,7 +255,7 @@ function compile (file) {
             let i = get_i(stack, -1)
             if ('metaName' in i && i.metaName == 'if') {
                 pt()
-                i.add_branch(pe(Parser.LE))
+                i.add_branch(new VNode(pe(Parser.LE)))
                 current_scope = i.children
                 return
             } else {

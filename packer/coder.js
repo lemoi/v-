@@ -5,14 +5,27 @@ class Coder {
         this.buffer = []
     }
 
-    add_line (str) {
-        this.buffer.push(Coder.INDENT_CHARACTER.repeat(this._indent) 
-            + str + Coder.LE)
-        this.lineNumber++ 
+    add (str) {
+        this.buffer.push(str)        
+    }
+
+    add_line (str, auto_linefeed = true) {
+        this.buffer.push(Coder.INDENT_CHARACTER.repeat(this._indent * Coder.INDENT_LEVEL) 
+            + str)
+        if (auto_linefeed) this.add_newline()
+    }
+
+    add_newline () {
+        this.buffer.push(Coder.LE)
+        this.lineNumber++
     }
 
     indent () {
-        this._indent += Coder.INDENT_LEVEL
+        this._indent++
+    }
+    
+    deindent () {
+        this._indent--
     }
 
     toString () {
