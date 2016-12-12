@@ -22,17 +22,10 @@ class Dock_m extends Vpp{
 }
 
 function Dock_vm () {
-    return new ViewModel({n: [1, 2]},
-    [new Value(function () {
-        return !(this.get('i')>1)?"Hi, come here":"Hi, see you agin"
-    }),
-    new Element('div', 
-    {onClick:new Value(function ()
-    {return this.get('b_click')})}),
-    new For(['i'], new Value(function(){
-    return this.get('n')}), [new A({date:'2016-12-10'},
-    id: new Value(function(){this.get('i')}))]
-    )])
+/*
+    details in ./sample.vm
+*/
+    ...
 }
 
 export default function Dock () {
