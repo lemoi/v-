@@ -1,4 +1,8 @@
-const NotImplement = new Error('NotImplement')
-const FileNotFound = new Error('FileNotFound')
+//output directory
+const directory = 'vpp_cache'
 
-module.exports = { NotImplement, FileNotFound }
+//vpp version
+const version = require('package.json').version
+
+//compile options
+const production = require('process').env.NODE_ENV == 'production'

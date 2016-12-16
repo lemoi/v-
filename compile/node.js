@@ -4,8 +4,8 @@ const { TString, TNumber, TVariable } = require('./expression.js')
 const Coder = require('../packer/coder.js')
 
 class Node {
-    pack () { throw NotImplement }
-    serialize () { throw NotImplement }
+    pack () { throw NotImplement('pack[func] in ' + this.constructor.name) }
+    serialize () { throw NotImplement ('serialize[func] in ' + this.constructor.name)}
 }
 
 Node.ELEMENT_NODE = 1
@@ -88,7 +88,7 @@ class ENode extends Node {
         has_children = this.children.length != 0
 
         if (is_instance(this.nodeName)) {
-            coder.add('new ' + this.nodeName + '(', false)
+            coder.add('new ' + this.nodeName + '_vpp(', false)
         } else {
             coder.add('new Element("' + this.nodeName + '"', false)
             if (has_attr || has_children) coder.add(', ')  

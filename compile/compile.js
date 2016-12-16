@@ -1,5 +1,4 @@
 const Parser = require('./parser.js')
-const fs = require('fs')
 const { FileNotFound } = require('../def.js')
 const { ForMeta, IncludeMeta, IfMeta, DefineMeta } = require('./meta.js')
 const { DNode, TNode, VNode, ENode } = require('./node.js')
@@ -11,7 +10,7 @@ function get_i (array_like, index) {
     return array_like[index]
 }
 
-const META = ['for', 'include', 'if', 'elif', 'else', 'endif', 'endfor']
+const META = ['for', 'include', 'if', 'elif', 'else', 'endif', 'endfor', 'define']
 
 const KEY_WORD_INCLUDE = '<>'
 const KEY_WORD_NODE = '<>=/'
@@ -49,14 +48,9 @@ function is_e_kw (chr) {
 }
 
 //compile and return ast
-function compile (file) {
-    try {
-        var data = fs.readFileSync(file, { encoding: 'utf8'})
-    } catch (e) {
-        throw FileNotFound
-    }
+function compile (str) {
 
-    const parser = new Parser(data, file)
+    const parser = new Parser(str, file)
 
     //pick a token
     const pt = (stop_at_space = true, ignore_fspace = true, kw = null) => 
@@ -208,9 +202,9 @@ function compile (file) {
             let field = st()
             if (is_vaild_var(field)) {
                 pt()
-                let def = new DefineMeta(field, pt())
+                let def = new DefineMeta(field, new VNode(pe(Parser.LE)))
                 current_scope.push(def)
-                current_scope = def.scope
+                current_scope = def.children
                 return
             }
         } else if (meta == 'for') {

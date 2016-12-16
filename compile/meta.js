@@ -1,9 +1,9 @@
-const  { NotImplement } = require('../def.js')
+const  { NotImplement } = require('../error/error_static.js')
 const path = require('path')
 const Coder = require('../packer/coder.js')
 
 class Meta {
-    serialize () { throw NotImplement }
+    serialize () { throw NotImplement('serialize[func] in ' + this.constructor.name) }
 }
 
 class ForMeta extends Meta {
@@ -40,7 +40,7 @@ class ForMeta extends Meta {
     }
 }
 
-class IncludeMeta extends Meta{
+class IncludeMeta extends Meta {
     constructor (filePath) {
         super()
         this.filePath = filePath

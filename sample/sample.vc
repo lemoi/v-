@@ -9,7 +9,7 @@
 import Vpp from 'vpp-position'
 import A from './A'
 
-class Dock_m extends Vpp{
+class Dock extends Vpp {
     constructor () {
         super()
         this.i = 0
@@ -28,8 +28,8 @@ function Dock_vm () {
     ...
 }
 
-export default function Dock () {
-    let m = new Dock_m();
+export default function Dock_vpp () {
+    let m = new Dock();
     let vm = new Dock_vm();
     m.__vm__ = vm;
     vm.__m__ = m;

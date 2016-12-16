@@ -1,3 +1,6 @@
+const { version } = require('../def.js')
+const { VSyntaxError } = require('../error/error_static.js')
+
 class Parser {
     constructor (str, file) {
         this.index = 0
@@ -130,7 +133,7 @@ class Parser {
         }
         temp.push('^')
 
-        throw new SyntaxError(temp.join(''))
+        throw VSyntaxError(temp.join(''))
     }
 }
 Parser.LE = ['\r', '\n', '\r\n']

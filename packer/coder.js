@@ -9,6 +9,12 @@ class Coder {
         this.buffer.push(str)        
     }
 
+    add_section () {
+        let coder = new Coder(this._indent)
+        this.buffer.push(coder)
+        return coder
+    }
+
     add_line (str, auto_linefeed = true) {
         this.buffer.push(Coder.INDENT_CHARACTER.repeat(this._indent * Coder.INDENT_LEVEL) 
             + str)
@@ -29,7 +35,14 @@ class Coder {
     }
 
     toString () {
-        return this.buffer.join('')
+        let result = []
+        for (let i in this.buffer) {
+            if (i instanceof Coder)
+                result.push(i.toString())
+            else
+                result.push(i)
+        }
+        return result.join('')
     }
 }
 
