@@ -2,6 +2,7 @@ const  { NotImplement } = require('../def.js')
 const { Meta } = require('./meta.js')
 const { TString, TNumber, TVariable } = require('./expression.js')
 const Coder = require('../packer/coder.js')
+const { pn } = require('../def.js')
 
 class Node {
     pack () { throw NotImplement('pack[func] in ' + this.constructor.name) }
@@ -42,7 +43,7 @@ class DNode extends Node {
                 else coder.add(',')
                 coder.add_newline()    
                 coder.add_line(param + ': ', false)
-                coder.add(v.serialize())
+                coder.add(v === null ? 'null' : v.serialize())
             }
             coder.add_newline()
             coder.add_line('}', false)            
@@ -88,7 +89,7 @@ class ENode extends Node {
         has_children = this.children.length != 0
 
         if (is_instance(this.nodeName)) {
-            coder.add('new ' + this.nodeName + '_vpp(', false)
+            coder.add(pn + this.nodeName + '(', false)
         } else {
             coder.add('new Element("' + this.nodeName + '"', false)
             if (has_attr || has_children) coder.add(', ')  
@@ -103,7 +104,7 @@ class ENode extends Node {
                 else coder.add(',')
                 coder.add_newline()    
                 coder.add_line(attr + ': ', false)
-                coder.add(v.serialize())
+                coder.add(v === null ? 'null' : v.serialize())
             }
             coder.add_newline()
             coder.add_line('}', false)            

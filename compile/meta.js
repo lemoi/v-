@@ -41,11 +41,12 @@ class ForMeta extends Meta {
 }
 
 class IncludeMeta extends Meta {
-    constructor (filePath) {
+    constructor (filePath, alias = null) {
         super()
         this.filePath = filePath
         this.metaName = 'include'
         this.file = path.basename(filePath)
+        this.alias = alias 
     }
 } 
 
@@ -121,7 +122,7 @@ class DefineMeta extends Meta {
     serialize (is_instance, indent) {
         let coder = new Coder(indent),
         has_children = this.children.length != 0
-        coder.add('new Define('+ JSON.stringify(this.field))
+        coder.add('new Define('+ JSON.stringify(this.field) + ', ' + this.expression.serialize())
 
         if (has_children) {
             coder.add(', [')

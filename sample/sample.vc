@@ -6,10 +6,10 @@
 @producer       vpp@0.1.0
 */
 
-import Vpp from 'vpp-position'
-import A from './A'
+import { Component } from 'vpp-position'
+import { A_f } from './A'
 
-class Dock extends Vpp {
+class Dock extends Component {
     constructor () {
         super()
         this.i = 0
@@ -28,10 +28,4 @@ function Dock_vm () {
     ...
 }
 
-export default function Dock_vpp () {
-    let m = new Dock();
-    let vm = new Dock_vm();
-    m.__vm__ = vm;
-    vm.__m__ = m;
-    return m;
-}
+export Dock_f = factory_helper(Dock, Dock_vm)

@@ -115,3 +115,7 @@ value = function () {
 ||  "\""
 ||  [this.get('v')]
 }
+
+命名空间重叠问题
+#include <../a/A => B>
+import { _$_A_f as _$_B_f } from "../A.js";

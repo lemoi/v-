@@ -1,6 +1,6 @@
 class Scope {}
 
-class Define extends Scope{
+class Define extends Scope {
     constructor (field, children) {
         super()
         this.field = field

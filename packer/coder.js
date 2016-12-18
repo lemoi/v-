@@ -9,7 +9,11 @@ class Coder {
         this.buffer.push(str)        
     }
 
-    add_section () {
+    add_section (child) {
+        if (child !== undefined) {
+            this.buffer.push(child)
+            return
+        }
         let coder = new Coder(this._indent)
         this.buffer.push(coder)
         return coder
@@ -36,7 +40,7 @@ class Coder {
 
     toString () {
         let result = []
-        for (let i in this.buffer) {
+        for (let i of this.buffer) {
             if (i instanceof Coder)
                 result.push(i.toString())
             else

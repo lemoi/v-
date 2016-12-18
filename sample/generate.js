@@ -1,5 +1,3 @@
-const pack = require('../packer')
-const fs = require('fs')
-fs.writeFile('./sample.vm', pack('sample.v', 'sample.js', 'sample'), 'utf8', function (err) {
-    console.log('complete')
-})
+const Packer = require('../packer')
+const packer = new Packer(__dirname)
+packer.pack_auto('showcases')

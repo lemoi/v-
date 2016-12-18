@@ -48,9 +48,9 @@ function is_e_kw (chr) {
 }
 
 //compile and return ast
-function compile (str) {
+function compile (str, filename) {
 
-    const parser = new Parser(str, file)
+    const parser = new Parser(str, filename)
 
     //pick a token
     const pt = (stop_at_space = true, ignore_fspace = true, kw = null) => 
@@ -122,9 +122,14 @@ function compile (str) {
             if (seek(true, false) == '<') {
                 pick(true, false)
                 word = pt()
+                let alias = null;
+                if (st(true, true, '') == '=>') {
+                    pt(true, true, '')
+                    alias = pt()
+                }
                 if (seek(true, false) == '>') {
                     pick()
-                    include_list.push(new IncludeMeta(word))
+                    include_list.push(new IncludeMeta(word, alias))
                     word = seek()
                     continue
                 }
@@ -284,7 +289,7 @@ function compile (str) {
     }
 
     //handle define
-    let dnode = handle_node(true)
+    let ast = handle_node(true)
     //end define
 
     while (!parser.eof) {
@@ -327,7 +332,7 @@ function compile (str) {
         }
         err()
     }
-    return [include_list, dnode]
+    return [include_list, ast]
 }
 
 module.exports = compile
