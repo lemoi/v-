@@ -1,4 +1,3 @@
-
 const NotImplement = details => new Error('NotImplement: ' + details)
 
 const FileNotFound = details => new Error('FileNotFound: ' + details)

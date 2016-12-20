@@ -1,22 +1,20 @@
-import { _$_Card_f as _$_Card } from "./Card.js";
+import { Card_f as Card } from "./Card.js";
+
+import { Component } from 'react';
 
 class showcases extends Component {
     constructor() {
         super()
     }
 }
-function _$_showcases_vm () {
-    return new ViewModel([
-    "\n",
-    new For("i", new Value(function(){return [1,2,3];}), [
-    "\n",
-    _$_Card({
+function showcases_vm () {
+    return new ViewModel("showcases", null, [
+    new For({"i":null,"j":null}, new Value(function(){return [1,2,3];}), function(){return [
+    Card({
     name: new Value(function(){return this.get("i");})
-    }),
-    "\n"
-    ]),
-    "\n"
+    }, null)
+    ];})
     ]);
 }
 
-export const _$_showcases_f = factory_helper(showcases, _$_showcases_vm);
+export const showcases_f = factory_helper(showcases, showcases_vm);

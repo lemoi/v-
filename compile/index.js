@@ -1,5 +1,5 @@
 const Parser = require('./parser.js')
-const { FileNotFound } = require('../def.js')
+const { NotImplement } = require('../error/error_static.js')
 const { ForMeta, IncludeMeta, IfMeta, DefineMeta } = require('./meta.js')
 const { DNode, TNode, VNode, ENode } = require('./node.js')
 const { TString, TNumber, TVariable } = require('./expression.js')
@@ -179,7 +179,7 @@ function compile (str, filename) {
                         if (is_vaild_var(token))
                             node.set_param(word, new VNode([new TVariable(token)]))
                         else if (is_vaild_number(token))
-                            node.set_param(word, new VNode([new TNumber(token)]))
+                            node.set_param(word, token)
                         else
                             err()
                     }
@@ -223,6 +223,8 @@ function compile (str, filename) {
                         field = [field, pt()]
                     else
                         err()
+                } else {
+                    field = [field]
                 }
                 if (st() == 'in') {
                     pt()
@@ -294,11 +296,7 @@ function compile (str, filename) {
 
     while (!parser.eof) {
         word = seek(false, false)
-        if (word == '\\') {
-            pick()
-            current_scope.push(new TNode(pick(false, false)))
-            continue
-        } else if (word == '<') {
+        if (word == '<') {
             parser.set_kw(KEY_WORD_NODE)
             if (parser.seek(2) != '/') {
                 handle_node()
@@ -327,7 +325,14 @@ function compile (str, filename) {
         } else {
             parser.set_kw(KEY_WORD_TEXT)
             word = pt(false, false)
-            current_scope.push(new TNode(word))
+            while (seek(false, false) == '\\') {
+                pick(false, false)
+                word += pick(false, false)
+                word += pt(false, false)
+            }
+            word = word.trim()
+            if (word.length > 0)
+                current_scope.push(new TNode(word))
             continue
         }
         err()

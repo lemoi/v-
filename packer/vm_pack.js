@@ -9,7 +9,7 @@ function vm_pack (files, ast, name) {
     coder.add_line('function ' + pn + name + '_vm () {')
     coder.indent()
     coder.add_line('return ', false)
-    coder.add(ast.serialize(is_instance, coder._indent) + ';')
+    coder.add(ast.serialize(is_instance, coder._indent))
     coder.deindent()
     coder.add_newline()
     coder.add_line('}')

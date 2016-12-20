@@ -1,4 +1,4 @@
-class Vpp {
+class Component {
     constructor () {
         this.__oldData__ = Object.create(null)
     }
@@ -19,3 +19,4 @@ class Vpp {
         this.__update__()
     }
 }
+module.exports = Component

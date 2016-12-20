@@ -1,4 +1,5 @@
-const { NotImplement } = require('../def.js')
+const  { NotImplement } = require('../error/error_static.js')
+
 class Type {
     serialize () { throw NotImplement }
 }

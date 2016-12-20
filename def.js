@@ -6,7 +6,7 @@ const m_ext = '.js'
 const dest_ext = '.js'
 
 //preserved namespace
-const pn = '_$_' 
+const pn = '' 
 
 //cache directory
 const cache = 'vpp_cache'
@@ -15,6 +15,6 @@ const cache = 'vpp_cache'
 const version = require('./package.json').version
 
 //compile options
-const production = require('process').env.NODE_ENV == 'production'
+let production = require('process').env.NODE_ENV == 'production'
 
 module.exports = { vm_ext, m_ext, dest_ext, pn, cache, version, production }

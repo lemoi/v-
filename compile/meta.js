@@ -1,6 +1,7 @@
 const  { NotImplement } = require('../error/error_static.js')
 const path = require('path')
 const Coder = require('../packer/coder.js')
+const { pn } = require('../def.js')
 
 class Meta {
     serialize () { throw NotImplement('serialize[func] in ' + this.constructor.name) }
@@ -18,11 +19,15 @@ class ForMeta extends Meta {
 
     serialize (is_instance, indent) {
         let coder = new Coder(indent),
-        has_children = this.children.length != 0
-        coder.add('new For('+ JSON.stringify(this.fields) + ', ' + this.obj.serialize())
+        has_children = this.children.length != 0,
+        fields = {}
+        for (let i of this.fields) {
+            fields[i] = null
+        }
+        coder.add('new ' + pn + 'For('+ JSON.stringify(fields) + ', ' + this.obj.serialize() + ', ')
 
         if (has_children) {
-            coder.add(', [')
+            coder.add('function(){return [')
             let first = true
             for (let child of this.children) {
                 if (first) first = false
@@ -31,7 +36,9 @@ class ForMeta extends Meta {
                 coder.add_line(child.serialize(is_instance, indent), false)
             }
             coder.add_newline()
-            coder.add_line(']', false)
+            coder.add_line('];}', false)
+        } else {
+            coder.add('null')
         }
 
         coder.add(')')
@@ -69,7 +76,7 @@ class IfMeta extends Meta {
     serialize (is_instance, indent) {
         let coder = new Coder(indent),
         has_branch = this.branchs.length != 0
-        coder.add('new If(')
+        coder.add('new ' + pn + 'If(')
 
         if (has_branch) {
             coder.add('[')
@@ -81,10 +88,10 @@ class IfMeta extends Meta {
                 coder.add_newline()
                 let condtion = branch.condtion == '__else__' ? '"__else__"' : 
                                 branch.condtion.serialize()
-                coder.add_line(condtion, false)
+                coder.add_line(condtion + ', ', false)
                 let children = branch.children
                 if (children.length != 0) {
-                    coder.add(', [')
+                    coder.add('[')
                     let first = true
                     for (let child of children) {
                         if (first) first = false
@@ -93,8 +100,11 @@ class IfMeta extends Meta {
                         coder.add_line(child.serialize(is_instance, indent), false)
                     }
                     coder.add_newline()
-                    coder.add_line(']]', false)
+                    coder.add_line(']', false)
+                } else {
+                    coder.add('null')
                 }
+                coder.add(']')
             }
             coder.add_newline()
             coder.add_line(']', false)
@@ -122,10 +132,10 @@ class DefineMeta extends Meta {
     serialize (is_instance, indent) {
         let coder = new Coder(indent),
         has_children = this.children.length != 0
-        coder.add('new Define('+ JSON.stringify(this.field) + ', ' + this.expression.serialize())
+        coder.add('new ' + pn + 'Define('+ JSON.stringify(this.field) + ', ' + this.expression.serialize() + ', ')
 
         if (has_children) {
-            coder.add(', [')
+            coder.add('[')
             let first = true
             for (let child of this.children) {
                 if (first) first = false
@@ -135,6 +145,8 @@ class DefineMeta extends Meta {
             }
             coder.add_newline()
             coder.add_line(']', false)
+        } else {
+            coder.add('null')
         }
 
         coder.add(')')
