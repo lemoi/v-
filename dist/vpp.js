@@ -250,8 +250,55 @@ var types = Object.freeze({
 	object: object
 });
 
+class Component$1 {
+    constructor () {
+        this.__argv__ = Object.create(null);
+    }
+
+    __value__ (var_name) {
+        if (this.hasOwnProperty(var_name))
+            return this[var_name];
+        else if (this.argv.hasOwnProperty(var_name))
+            return this.argv[var_name];
+        else 
+            throw VReferenceError(this.__m__.name, var_name);
+    }
+
+    __beforeLoad__ () {
+
+    }
+    
+    __didLoad__ () {
+
+    }
+
+    __didUnload__ () {
+
+    }
+
+    __update__ () {
+        this.__v__.update();
+    }
+
+    update () {
+        this.__update__();
+    }
+}
+
+function create_factory (m_constructor, vm_constructor) {
+    return function (params) {
+        let m = new m_constructor();
+        let vm = new vm_constructor();
+        m.__vm__ = vm;
+        vm.__m__ = m;
+        m.__beforeLoad__();
+        vm.init(params);
+        return vm;
+    }
+}
+
 const vpp = {
-    vm, types
+    vm, types, Component: Component$1, create_factory
 };
 
 return vpp;

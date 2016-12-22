@@ -1,4 +1,4 @@
-import { vm as _v_vm } from 'vpp';
+import { vm as _v_vm, create_factory as _v_create_factory } from 'vpp'
 
 import { Component } from 'vpp';
 
@@ -25,4 +25,4 @@ function _v_Card_vm () {
     ]);
 }
 
-export const _v_Card_f = _v_factory_helper(Card, _v_Card_vm);
+export const _v_Card_f = _v_create_factory(Card, _v_Card_vm);

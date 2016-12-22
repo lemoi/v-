@@ -1,4 +1,4 @@
-import { vm as _v_vm } from 'vpp';
+import { vm as _v_vm, create_factory as _v_create_factory } from 'vpp'
 import { _v_Card_f as _v_Card } from './Card.js';
 
 import { Component } from 'vpp';
@@ -22,4 +22,4 @@ function _v_showcases_vm () {
     ]);
 }
 
-export const _v_showcases_f = _v_factory_helper(showcases, _v_showcases_vm);
+export const _v_showcases_f = _v_create_factory(showcases, _v_showcases_vm);

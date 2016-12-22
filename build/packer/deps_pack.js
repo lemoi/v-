@@ -1,7 +1,7 @@
 const Coder = require('./coder');
 const { dest_ext, pn } = require('../def');
 
-const common = `import { vm as ${pn}vm } from 'vpp';`;
+const common = `import { vm as ${pn}vm, create_factory as ${pn}create_factory } from 'vpp'`;
 function deps_pack (include_list) {
     const coder = new Coder();
     coder.add_line(common);
