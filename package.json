@@ -7,7 +7,6 @@
     "test": "test"
   },
   "scripts": {
-    "build": "node build/build.js"
   },
   "repository": {
     "type": "git",

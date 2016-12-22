@@ -1,5 +1,0 @@
-const fs = require('fs')
-const path = require('path')
-const mkdirp = require('mkdirp')
-console.log(process.argv[1])
-console.log(path.join('.','a/'))
