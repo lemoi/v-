@@ -1,2 +1,2 @@
 # vpp
-well designed front-end framework
+well-designed universal framework

@@ -1,20 +1,25 @@
-import { Card_f as Card } from "./Card.js";
+import { vm as _v_vm } from 'vpp';
+import { _v_Card_f as _v_Card } from './Card.js';
 
-import { Component } from 'react';
+import { Component } from 'vpp';
 
 class showcases extends Component {
     constructor() {
         super()
     }
 }
-function showcases_vm () {
+function _v_showcases_vm () {
+    const { Define, Element, For, 
+    Value, If, ViewModel, 
+    VText } = _v_vm;
     return new ViewModel("showcases", null, [
     new For({"i":null,"j":null}, new Value(function(){return [1,2,3];}), function(){return [
-    Card({
-    name: new Value(function(){return this.get("i");})
+    _v_Card({
+    name: new Value(function(){return this.get("i");}),
+    is_a: true
     }, null)
     ];})
     ]);
 }
 
-export const showcases_f = factory_helper(showcases, showcases_vm);
+export const _v_showcases_f = _v_factory_helper(showcases, _v_showcases_vm);

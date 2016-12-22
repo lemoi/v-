@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { Component } from 'vpp';
 
 class Card extends Component {
     constructor() {

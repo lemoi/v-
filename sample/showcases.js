@@ -1,4 +1,4 @@
-import { Component } from 'react';
+import { Component } from 'vpp';
 
 class showcases extends Component {
     constructor() {

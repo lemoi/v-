@@ -1,7 +1,7 @@
-const type = require('./type')
+const Types = require('./types')
 
 const Vpp = {
-    type
+    Types
 }
 
 module.exports = Vpp;
