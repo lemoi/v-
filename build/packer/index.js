@@ -1,13 +1,13 @@
-const vm_pack = require('./vm_pack.js');
-const deps_pack = require('./deps_pack.js');
-const factory_pack = require('./factory_pack.js');
+const vm_pack = require('./vm_pack');
+const deps_pack = require('./deps_pack');
+const factory_pack = require('./factory_pack');
 const compile = require('../compile');
 const fs = require('fs');
 const path = require('path');
 const mkdirp = require('mkdirp');
-const Coder = require('./coder.js');
-const { cache, vm_ext, m_ext , dest_ext } = require('../def.js');
-const { FileNotFound } = require('../error_static.js');
+const Coder = require('./coder');
+const { cache, vm_ext, m_ext , dest_ext } = require('../def');
+const { FileNotFound } = require('../error_static');
 //convert include_list to files
 function convert (include_list) {
     let files = [], deps = [];
@@ -32,13 +32,15 @@ class Packer {
         dest_path = path.join(dest_dir, file + dest_ext),
         coder = new Coder();
 
+        let m_exist = true;
         if (!fs.existsSync(vm_path)) throw FileNotFound(vm_path);
-        if (!fs.existsSync(m_path)) throw FileNotFound(m_path);
+        if (!fs.existsSync(m_path)) m_exist = false;
 
         const vm_source = fs.readFileSync(vm_path, 'utf8'),
-        m_source = fs.readFileSync(m_path, 'utf8'),  
+        m_source = m_exist && fs.readFileSync(m_path, 'utf8') || '',  
         [include_list, ast] = compile(vm_source, vm_path),
         [deps, files] = convert(include_list);
+
         if (!fs.existsSync(dest_dir))
             mkdirp.sync(dest_dir);
         coder.add_section(deps_pack(include_list));
@@ -47,7 +49,7 @@ class Packer {
         coder.add_newline();
         coder.add_section(vm_pack(files, ast, file));
         coder.add_newline();
-        coder.add_section(factory_pack(file));
+        coder.add_section(factory_pack(file, m_exist));
         fs.writeFileSync(dest_path, coder.toString());
         return deps;
     }

@@ -1,28 +1,23 @@
-import { vm as _v_vm, create_factory as _v_create_factory } from 'vpp'
+import { vm as _v_vm, create_factory as _v_create_factory } from 'vpp';
+import { types as _v_types } from 'vpp';
 
-import { Component } from 'vpp';
 
-class Card extends Component {
-    constructor() {
-        super()
-    }
-}
 function _v_Card_vm () {
     const { Define, Element, For, 
-    Value, If, ViewModel, 
+    VAttr, If, ViewModel, 
     VText } = _v_vm;
     return new ViewModel("Card", {
-    "name.type": Vpp.Types.string,
+    "name.type": _v_types.string,
     "name": "1",
-    "id.type": Vpp.Types.p(1,2),
+    "id.type": _v_types.p(1,2),
     "id": 3
     }, [
     new Element("div", {
     chekced: true
     }, [
-    new VText(new Value(function(){return this.get("name");}))
+    new VText(function () { return this.get(["name"]); }, true)
     ])
     ]);
 }
 
-export const _v_Card_f = _v_create_factory(Card, _v_Card_vm);
+export var _v_Card_f = _v_create_factory(_v_Card_vm)

@@ -1,6 +1,12 @@
-export default class VText {
-    constructor (value) {
+import Value from './Value';
+
+export default class VText extends Value {
+    constructor (vf, pure) {
+        super(vf, pure);
         this.native = null;
-        this.text = value;
+    }
+
+    update (data) {
+
     }
 }

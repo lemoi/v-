@@ -9,4 +9,8 @@ export default class Element {
         set_parent(this, children);
         set_host(this, parameters);
     }
+
+    init () {
+        
+    }
 }

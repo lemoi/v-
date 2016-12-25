@@ -1,9 +1,10 @@
-const Coder = require('./coder.js');
-const { pn } = require('../def.js');
+const Coder = require('./coder');
+const { pn } = require('../def');
 
-function factory_pack (file) {
-    let coder = new Coder();
-    coder.add_line('export const '+ pn + file +'_f = '+ pn + 'create_factory(' + file + ', ' + pn + file + '_vm);');
+function factory_pack (file, m_exist) {
+    let coder = new Coder(), 
+    f = pn + file;
+    coder.add_line(`export var ${f}_f = ${pn}create_factory(${f}_vm${m_exist ? ', ' + file : ''})`);
     return coder;
 }
 

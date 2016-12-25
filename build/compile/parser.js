@@ -11,6 +11,7 @@ class Parser {
         this.eof = (this.index > this.end);
         this.file = file;
         this.doc = [];
+        this.token = '';
     }
 
     set_kw (kw) {//kw is an array-like
@@ -98,29 +99,31 @@ class Parser {
     }
 
     pick_token (stop_at_space = true, ignore_fspace = true, kw = null) {
-        if (ignore_fspace) this.skip_space();
+        let space = this.skip_space();
         if (kw === null) kw = this.kw;
-        return this.pick_until(function (chr) {
+        return this.token = (ignore_fspace ? '' : space) + this.pick_until(function (chr) {
             return (stop_at_space ? Parser.is_ep(chr) : false) || kw.indexOf(chr) != -1; 
-        })
+        });
     }
 
     seek_token (stop_at_space = true, ignore_fspace = true, kw = null) {
-        if (ignore_fspace) this.skip_space();
-        if (kw === null) kw = this.kw;
-        return this.seek_until(function (chr) {
-            return (stop_at_space ? Parser.is_ep(chr) : false) || kw.indexOf(chr) != -1;  
-        })
+        let word;
+        this.save();
+        word = this.pick_token(stop_at_space, ignore_fspace, kw);
+        this.restore();
+        return word;
     }
 
     skip_space () {
+        let space = '';
         while (Parser.is_ep(this.seek(1, false, false)))
-            this.pick(false, false);
+            space += this.pick(false, false);
+        return space;
     }
 
     error (what = 'unexpected token') {
-        let temp = ['In ', this.file, ' ', this.linecode, ':', this.lineindex, ', '],
-        index = this.index, front = 6;
+        let temp = ['at ', this.file, ' ', this.linecode, ':', this.lineindex, ', '],
+        index = this.index, front = 6, space;
         temp.push(what);
         temp.push('\n\t');
         if (index > front)
@@ -129,9 +132,10 @@ class Parser {
             index = 0;
             front = index;
         }
+        if (!this.eof)  { space = this.skip_space(); this.pick_token()};
         temp.push(JSON.stringify(this.str.slice(index, this.index)).slice(1, -1));
-        if (!this.eof) temp.push(this.seek_token(true, false, ''));
         temp.push('\n\t');
+        front = front + space.length - this.token.length;
         while (front--) {
             temp.push(' ');
         }

@@ -1,39 +1,37 @@
-import { Component } from 'react';
-import { Component as Component$1 } from 'vpp';
+import { create_factory, vm } from 'vpp';
 
-class Card extends Component {
-    constructor() {
-        super();
-    }
-}
-function Card_vm () {
-    return new ViewModel({
-    name: new Value(function(){return 1;})
+function _v_Card_vm () {
+    const { Define, Element, For, 
+    VAttr, If, ViewModel, 
+    VText } = vm;
+    return new ViewModel("Card", {
+    "name": "1",
+    "id": 3
     }, [
-    new Element("div", null, [
-    new Value(function(){return this.get("name");})
-    ]),
-    new Define("o", new Value(function(){return this.get("i")+1;}), null)
-    ]);
-}
-
-const Card_f = factory_helper(Card, Card_vm);
-
-class showcases extends Component$1 {
-    constructor() {
-        super();
-    }
-}
-function showcases_vm () {
-    return new ViewModel(null, [
-    new For({"i":null,"j":null}, new Value(function(){return [1,2,3];}), [
-    Card_f({
-    name: new Value(function(){return this.get("i");})
-    }, null)
+    new Element("div", {
+    chekced: true
+    }, [
+    new VText(function () { return this.get("name"); })
     ])
     ]);
 }
 
-const showcases_f = factory_helper(showcases, showcases_vm);
+var _v_Card_f = create_factory(_v_Card_vm);
 
-export { showcases_f };
+function _v_showcases_vm () {
+    const { Define, Element, For, 
+    VAttr, If, ViewModel, 
+    VText } = vm;
+    return new ViewModel("showcases", null, [
+    new For({ "i": null, "j": null }, new VAttr(function () { return [1,2,3]; }), function () { return [
+    _v_Card_f({
+    name: new VAttr(function () { return this.get("i"); }),
+    is_a: true
+    }, null)
+    ]; })
+    ]);
+}
+
+var _v_showcases_f = create_factory(_v_showcases_vm);
+
+export { _v_showcases_f };

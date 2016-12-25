@@ -33,7 +33,11 @@ class TVariable extends Type {
     }
 
     serialize () {
-        return 'this.get("' + this.name + '")';
+        let traces = this.name.split('.');
+        traces = traces.map(function (p) {
+            return JSON.stringify(p);
+        });
+        return 'this.get([' + traces.toString() + '])';
     }
 }
 

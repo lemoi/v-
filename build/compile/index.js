@@ -102,9 +102,17 @@ function compile (str, filename) {
                 token = pt(true, true, KEY_WORD_EXPRESSION);
                 if (is_vaild_number(token))
                     buffer.push(new TNumber(token));
-                else if (is_vaild_var(token))
+                else if (is_vaild_var(token)) {
+                    while (seek(false, false) == '.') {
+                        pick();
+                        let t = pt(true, true, KEY_WORD_EXPRESSION);
+                        if(is_vaild_var(t))
+                            token += ('.' + t);
+                        else 
+                            err();
+                    }
                     buffer.push(new TVariable(token));
-                else 
+                } else 
                     err();
             } 
         }
@@ -117,18 +125,15 @@ function compile (str, filename) {
     let word = seek(), include_list = [];
     while (word == '#') {
         pick();
-        if (st(true, false) == 'include') {
-            pt(true, false);
-            if (seek(true, false) == '<') {
-                pick(true, false);
+        if (pt(true, false) == 'include') {
+            if (pick(true, false) == '<') {
                 word = pt();
                 let alias = null;
                 if (st(true, true, '') == '=>') {
                     pt(true, true, '');
                     alias = pt();
                 }
-                if (seek(true, false) == '>') {
-                    pick();
+                if (pick(true, false) == '>') {
                     include_list.push(new IncludeMeta(word, alias));
                     word = seek();
                     continue;
@@ -202,33 +207,28 @@ function compile (str, filename) {
     }
 
     function handle_meta () {
-        let meta = st();
+        let meta = pt();
         if (meta == 'define') {
-            pt();
-            let field = st();
+            let field = pt();
             if (is_vaild_var(field)) {
-                pt();
                 let def = new DefineMeta(field, new VNode(pe(Parser.LE)));
                 current_scope.push(def);
                 current_scope = def.children;
                 return;
             }
         } else if (meta == 'for') {
-            pt();
-            let field = st(true, true, [',']);
+            let field = pt(true, true, [',']);
             if (is_vaild_var(field)) {
-                pt(true, true, [',']);
-                if (seek() == ',') {
-                    pick();
-                    if (is_vaild_var(st()))
-                        field = [field, pt()];
+                if (pick() == ',') {
+                    let t = pt();
+                    if (is_vaild_var(t))
+                        field = [field, t];
                     else
                         err();
                 } else {
                     field = [field];
                 }
-                if (st() == 'in') {
-                    pt();
+                if (pt() == 'in') {
                     let f = new ForMeta(field, new VNode(pe(Parser.LE)));
                     current_scope.push(f);
                     current_scope = f.children;
@@ -237,7 +237,6 @@ function compile (str, filename) {
                 }
             }
         } else if (meta == 'if') {
-            pt();
             let i = new IfMeta(new VNode(pe(Parser.LE)));
             current_scope.push(i);
             current_scope = i.children;
@@ -246,7 +245,6 @@ function compile (str, filename) {
         } else if (meta == 'else') {
             let i = get_i(stack, -1);
             if ('metaName' in i && i.metaName == 'if') {
-                pt();
                 i.add_branch();
                 current_scope = i.children;
                 return;
@@ -256,7 +254,6 @@ function compile (str, filename) {
         } else if (meta == 'elif') {
             let i = get_i(stack, -1);
             if ('metaName' in i && i.metaName == 'if') {
-                pt();
                 i.add_branch(new VNode(pe(Parser.LE)));
                 current_scope = i.children;
                 return;
@@ -266,7 +263,6 @@ function compile (str, filename) {
         } else if (meta == 'endif') {
             let i = stack.pop();
             if ('metaName' in i && i.metaName == 'if') {
-                pt();
                 reset_current_scope();
                 return;
             } else {
@@ -275,7 +271,6 @@ function compile (str, filename) {
         } else if (meta == 'endfor') {
             let f = stack.pop();
             if ('metaName' in f && f.metaName == 'for') {
-                pt();
                 reset_current_scope();
                 return;
             } else {
@@ -285,7 +280,6 @@ function compile (str, filename) {
             err('not allowed include');
         } else if (meta == 'comment') {
             parser.save();
-            pt();
             pt(false, false, '#');
             pick();
             meta = pt();
@@ -300,7 +294,8 @@ function compile (str, filename) {
                 err('unclosed comment');
             }
             parser.clear();
-            return;
+            if (Parser.is_le(seek(true, false)))
+                return;
         }
         err();
     }

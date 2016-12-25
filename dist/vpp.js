@@ -4,15 +4,130 @@
     (global.vpp = factory());
 }(this, (function () { 'use strict';
 
+class Value {
+    constructor (vf, pure) {
+        this.vf = vf;
+        this.pure = pure;
+        this.scope = null;
+        this.data = null;
+        this.uid = Value.uid++;
+        Value.instance_map[this.uid] = this;
+    }
+
+    get (traces) {
+        return this.scope.value_with_trace(this.uid, traces);
+    }
+
+    get_without_trace (traces) {
+        return this.scope.value(traces)
+    }
+
+    init () {
+        set_scope(this);
+        this.data = this.vf;
+        this.get = this.get_without_trace;
+    }
+
+    destory () {
+        delete Value.instance_map[this.uid];
+    }
+
+}
+
+Value.uid = 0;
+Value.instance_map = {};
+
+function get$1 (root, traces) {
+    let target = root;
+    traces.forEach(function (p) {
+        target = target[p];
+    });
+    return target;
+}
+
+const ip = Value.instance_map;
+const dep = '$.$';
+function observe$1 () {
+    const root = {};
+
+    function add (uid, traces) {
+        let target = root;
+        traces.forEach(function (p) {
+            if (target.hasOwnProperty(p))
+                target = target[p];
+            else {
+                target = target[p] = {};
+            }
+        });
+        if (!target.hasOwnProperty(dep))
+            target[dep] = new Set();
+        target[dep].add(uid);
+    }
+
+    function spread (current, operation) {
+        for (let i in current) {
+            let t = current[i];
+            if (i == dep && t.size) {
+                t.forEach(function (uid) {
+                    if (ip.hasOwnProperty(uid))
+                        ip[uid].update(operation);
+                    else
+                        t.delete(uid); //gc
+                });
+            } else {
+                spread(t, operation);
+            }
+        }
+    }
+
+    function notify (traces, operation) {
+        try {
+            spread(get$1(root, traces), operation);
+        } catch (e) {
+            return false;
+        }
+    }
+
+    return { add, notify };
+}
+
 class Scope {
     constructor () {
         this.scope = null;
+        this.observer = observe$1();
     }
 
     init () {
         set_scope(this);
     }
+
+    value (traces) {
+        if (this.fields.hasOwnProperty(traces[0])) {
+            return get$1(this.fields, traces);
+        } else {
+            return this.scope.value(traces);    
+        }
+    }
+
+    value_with_trace (uid, traces) {
+        if (this.fields.hasOwnProperty(traces[0])) {
+            this.observer.add(uid, traces);
+            return get$1(this.fields, traces);
+        } else {
+            return this.scope.value_with_trace(uid, traces);    
+        }
+    }
 }
+
+const VReferenceError = (component, which) =>
+    new Error(which + 'is not defined in ' + component);
+
+const VTypeError = (component, arg) =>
+    new Error('Invaild argument type of ' + arg + ' passed to ' + component);
+
+const VArgumentError = (component, arg, few) =>
+    new Error((few ? 'too few' : 'too many') +
+    ' arguments to ' + component + ' -> ' + arg);
 
 class ViewModel extends Scope {
     constructor (name, parameters, children) {
@@ -20,6 +135,7 @@ class ViewModel extends Scope {
         this.name = name;
         this.parameters = parameters;
         this.children = children;
+        this.__m__ = null;
         set_parent(this, children);
         set_host(this, parameters);
     }
@@ -29,9 +145,23 @@ class ViewModel extends Scope {
         this.__m__.__didLoad__();
     }
 
-    value (var_name) {
-        return this.__m__.__value__(var_name);
+    value (traces) {
+        let ns = traces[0], m = this.__m__;
+        if (m.hasOwnProperty(ns))
+            return get(m, traces);
+        else if (m.__argv__.hasOwnProperty(ns))
+            return get(m.__argv__, traces);
+        else if (vpp.local.hasOwnProperty(ns))
+            return get(vpp.local, traces);
+        else
+            throw VReferenceError(this.name, traces);
     }
+
+    value_with_trace (uid, traces) {
+        this.observer.add(uid, traces);
+        return this.value(traces);
+    }
+
 
     render () {
         
@@ -46,34 +176,7 @@ class ViewModel extends Scope {
     }
 }
 
-class Value {
-    constructor (valuef) {
-        this.valuef = valuef;
-        this.scope = null;
-    }
-
-    get (var_name) {
-        if (this.scope == null)
-            set_scope(scope);
-        return this.scope.value(var_name)
-    }
-
-    valueOf () {
-        return this.valuef();
-    }
-}
-
-const VReferenceError = (component, which) =>
-    new Error(which + 'is not defined in ' + component);
-
-const VTypeError = (component, arg) =>
-    new Error('Invaild argument type of ' + arg + ' passed to ' + component);
-
-const VArgumentError = (component, arg, few) =>
-    new Error((few ? 'too few' : 'too many') +
-    ' arguments to ' + component + ' -> ' + arg);
-
-//#ifndef production
+//#ifndef PRODUCTION
 //#endif
 
 function is_str (obj) {
@@ -95,6 +198,7 @@ function set_host (host, params) {
     for (let k in params) {
         if (params[k] instanceof Value) {
             params[k].__poh__ = host;
+            params[k].name = k;
         }
     }
 }
@@ -102,7 +206,7 @@ function set_host (host, params) {
 function set_params (vm, params) {
     if (params !== null) {
         for (let p in params) {
-//#ifndef production
+//#ifndef PRODUCTION
             if (!(p in vm.parameters))
                 throw VArgumentError(vm.name, p, false);
 //#endif
@@ -111,12 +215,19 @@ function set_params (vm, params) {
     }
     if (vm.parameters !== null) {
         for (let p in vm.parameters) {
-//#ifndef production
-            if (vm.parameters[p] === null)
+            let v = vm.parameters[p];
+//#ifndef PRODUCTION
+            if (p.slice(-4) == '.type') {
+                let p_base = p.slice(0, -4);
+                if (!v(vm.parameters[p_base]))
+                    throw VTypeError(vm.name, p_base); 
+                continue;
+            }
+            if (v === null)
                 throw VArgumentError(vm.name, p, true);
-//#endif
-            let val = vm.parameters[p];
-            vm.__m__.__argv__[p] = val instanceof Value ? val.ValueOf() : val;
+//#endif    
+            if (v instanceof Value) v = v.ValueOf();
+            vm.__m__.__argv__[p] = v;
         }
     }
 }
@@ -127,27 +238,22 @@ function set_scope (unit) {
         !(poh instanceof ViewModel) ? poh.__poh__ : poh;
     while (poh !== null) {
         if (poh instanceof Scope) {
-            unit.scope = poh;
+            break;
         }
         poh = poh.__poh__;
     }
+    unit.scope = poh;
 }
 
 class Define extends Scope {
-    constructor (field, expression, children) {
+    constructor (fields, expression, children) {
         super();
-        this.field = field;
+        this.fields = fields;
         this.children = children;
         this.expression = expression;
         expression.__poh__ = this;
         set_parent(this, children);
-    }
-
-    value (var_name) {
-        if (this.field == var_name)
-            return this.expression.valueOf();
-        else
-            return this.scope.value(var_name);
+        this.observer = observe();
     }
 
     init () {
@@ -169,25 +275,25 @@ class Element {
 class For extends Scope {
     //field {k: v} or {k1: v1, k2: v2}
     //fpc: a function used for producing children
-    constructor (field, obj, fpc) {
+    constructor (fields, vf, fpc) {
         super();
-        this.field = field;
+        this.fields = fields;
         this.fpc = fpc;
         this.obj = obj;
         obj.__poh__ = this;
         this.children = fpc === null ? null : [];
         this.scope = null;
-    }
-
-    value (var_name) {
-        if (this.field.hasOwnProperty(var_name))
-            return this.field[var_name];
-        else
-            return this.scope.value(var_name);    
+        this.observer = observe();
     }
 
     init () {
         super.init();
+    }
+}
+
+class VAttr extends Value {
+    constructor (vf, pure) {
+        super(vf);
     }
 }
 
@@ -207,10 +313,14 @@ If.Branch = function (condition, children) {
     this.children = children;
 }
 
-class VText {
-    constructor (value) {
+class VText extends Value {
+    constructor (vf, pure) {
+        super(vf, pure);
         this.native = null;
-        this.text = value;
+    }
+
+    update (data) {
+
     }
 }
 
@@ -220,10 +330,11 @@ var vm = Object.freeze({
 	Define: Define,
 	Element: Element,
 	For: For,
-	Value: Value,
+	VAttr: VAttr,
 	If: If,
 	ViewModel: ViewModel,
-	VText: VText
+	VText: VText,
+	Value: Value
 });
 
 function type_sheck (obj, type) {
@@ -250,18 +361,9 @@ var types = Object.freeze({
 	object: object
 });
 
-class Component$1 {
+class Component {
     constructor () {
         this.__argv__ = Object.create(null);
-    }
-
-    __value__ (var_name) {
-        if (this.hasOwnProperty(var_name))
-            return this[var_name];
-        else if (this.argv.hasOwnProperty(var_name))
-            return this.argv[var_name];
-        else 
-            throw VReferenceError(this.__m__.name, var_name);
     }
 
     __beforeLoad__ () {
@@ -276,16 +378,18 @@ class Component$1 {
 
     }
 
-    __update__ () {
-        this.__v__.update();
+    $ () {
+        
     }
 
-    update () {
-        this.__update__();
+    __update__ (traces, operation) {
+        
     }
 }
 
-function create_factory (m_constructor, vm_constructor) {
+class DefaultModel extends Component {}
+
+function create_factory (vm_constructor, m_constructor = DefaultModel) {
     return function (params) {
         let m = new m_constructor();
         let vm = new vm_constructor();
@@ -297,8 +401,10 @@ function create_factory (m_constructor, vm_constructor) {
     }
 }
 
-const vpp = {
-    vm, types, Component: Component$1, create_factory
+var vpp = {
+    local: typeof window !== "undefined" ? window : global,
+    version: "0.1.0",
+    vm, types, Component, create_factory
 };
 
 return vpp;

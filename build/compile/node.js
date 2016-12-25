@@ -3,6 +3,7 @@ const { Meta } = require('./meta');
 const { TString, TNumber, TVariable } = require('./expression');
 const Coder = require('../packer/coder');
 const { pn, production } = require('../def');
+
 class Node {
     pack () { throw NotImplement('pack in ' + this.constructor.name) };
     serialize () { throw NotImplement ('serialize in ' + this.constructor.name)};
@@ -49,11 +50,11 @@ class DNode extends Node {
                 else coder.add(',');
                 coder.add_newline();
                 if (!production && v[1] !== undefined) {
-                    coder.add_line(JSON.stringify(param + '.' + 'type') + ': Vpp.Types.' + v[1] + ',');
+                    coder.add_line(JSON.stringify(param + '.' + 'type') + ': '+ pn + 'types.' + v[1] + ',');
                 }
                 coder.add_line(JSON.stringify(param) + ': ', false);
                 coder.add(v[0] === null ? 'null' : (v[0] instanceof Node) ? 
-                    v[0].serialize() : v[0]);
+                    v[0].serialize('attr') : v[0]);
             }
             coder.add_newline();
             coder.add_line('}', false);            
@@ -116,7 +117,7 @@ class ENode extends Node {
                 else coder.add(',');
                 coder.add_newline() ;   
                 coder.add_line(attr + ': ', false);
-                coder.add(v === null ? 'null' : v instanceof VNode ? v.serialize() : v);
+                coder.add(v === null ? 'null' : v instanceof Node ? v.serialize('attr') : v);
             }
             coder.add_newline();
             coder.add_line('}', false);           
@@ -168,21 +169,25 @@ class VNode extends Node {
         this.tokens = tokens;
     }
 
-    serialize (is_instance, indent = 0) {
-        let coder = new Coder(indent);
-        if (is_instance !== undefined)
-            coder.add('new VText(');
-        coder.add('new Value(function(){return ');
+    serialize (type, indent = 0) {
+        let coder = new Coder(indent), pure = true;
+        if (type == 'attr')
+            coder.add('new VAttr(function () { return ');            
+        else if (type == 'val')
+            coder.add('new Value(function () { return ');
+        else 
+            coder.add('new VText(function () { return ');
+
         for (let token of this.tokens) {
             if (token instanceof TVariable ||
                 token instanceof TString ||
                 token instanceof TNumber)
                 token = token.serialize();
+            else
+                pure = false;
             coder.add(token);
         }
-        coder.add(';})');
-        if (is_instance !== undefined)
-            coder.add(')');
+        coder.add('; }, ' + JSON.stringify(pure) + ')');
         return coder.toString();
     }
 }

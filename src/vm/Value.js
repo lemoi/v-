@@ -1,20 +1,34 @@
-import Scope from './Scope';
-import ViewModel from './ViewModel';
 import { set_scope } from './helper';
 
 export default class Value {
-    constructor (valuef) {
-        this.valuef = valuef;
+    constructor (vf, pure) {
+        this.vf = vf;
+        this.pure = pure;
         this.scope = null;
+        this.data = null;
+        this.uid = Value.uid++;
+        Value.instance_map[this.uid] = this;
     }
 
-    get (var_name) {
-        if (this.scope == null)
-            set_scope(scope);
-        return this.scope.value(var_name)
+    get (traces) {
+        return this.scope.value_with_trace(this.uid, traces);
     }
 
-    valueOf () {
-        return this.valuef();
+    get_without_trace (traces) {
+        return this.scope.value(traces)
     }
+
+    init () {
+        set_scope(this);
+        this.data = this.vf;
+        this.get = this.get_without_trace;
+    }
+
+    destory () {
+        delete Value.instance_map[this.uid];
+    }
+
 }
+
+Value.uid = 0;
+Value.instance_map = {};

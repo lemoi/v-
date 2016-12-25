@@ -19,14 +19,13 @@ class ForMeta extends Meta {
     serialize (is_instance, indent) {
         let coder = new Coder(indent),
         has_children = this.children.length != 0,
-        fields = {};
-        for (let i of this.fields) {
-            fields[i] = null;
-        }
-        coder.add('new For('+ JSON.stringify(fields) + ', ' + this.obj.serialize() + ', ');
+        fields = `{ ${JSON.stringify(this.fields[0])}: null${this.fields[1] ?
+            `, ${JSON.stringify(this.fields[1])}: null` : ''} }`;
+
+        coder.add('new For('+ fields + ', ' + this.obj.serialize('val') + ', ');
 
         if (has_children) {
-            coder.add('function(){return [');
+            coder.add('function () { return [');
             let first = true;
             for (let child of this.children) {
                 if (first) first = false;
@@ -35,7 +34,7 @@ class ForMeta extends Meta {
                 coder.add_line(child.serialize(is_instance, indent), false);
             }
             coder.add_newline();
-            coder.add_line('];}', false);
+            coder.add_line(']; }', false);
         } else {
             coder.add('null');
         }
@@ -86,7 +85,7 @@ class IfMeta extends Meta {
                 coder.add('[');
                 coder.add_newline();
                 let condtion = branch.condtion == '__else__' ? '"__else__"' : 
-                                branch.condtion.serialize();
+                                branch.condtion.serialize('val');
                 coder.add_line(condtion + ', ', false);
                 let children = branch.children;
                 if (children.length != 0) {
@@ -131,7 +130,7 @@ class DefineMeta extends Meta {
     serialize (is_instance, indent) {
         let coder = new Coder(indent),
         has_children = this.children.length != 0;
-        coder.add('new Define('+ JSON.stringify(this.field) + ', ' + this.expression.serialize() + ', ');
+        coder.add('new Define({ '+ JSON.stringify(this.field) + ': null }, ' + this.expression.serialize('val') + ', ');
 
         if (has_children) {
             coder.add('[');

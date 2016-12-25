@@ -1,4 +1,6 @@
-export default function create_factory (m_constructor, vm_constructor) {
+import DefaultModel from './DefaultModel';
+
+export default function create_factory (vm_constructor, m_constructor = DefaultModel) {
     return function (params) {
         let m = new m_constructor();
         let vm = new vm_constructor();

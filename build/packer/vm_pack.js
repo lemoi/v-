@@ -1,6 +1,6 @@
 const Coder = require('./coder');
 const { pn } = require('../def');
-const { vm } = require('../../dist/vpp.js');
+const { vm } = require('../../dist/vpp');
 
 function vm_pack (files, ast, name) {
     function is_instance (nodeName) {

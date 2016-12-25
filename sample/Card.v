@@ -3,7 +3,7 @@
       id:p(1,2) = 3>
     <div chekced >#name#</div>
 #comment
-    #define o i+1
+    #define 1 i
     #for i in c
     #endfor
 #end
