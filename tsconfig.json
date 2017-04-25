@@ -1,0 +1,16 @@
+{
+    "compilerOptions": {
+        "target": "ES5",
+        "module": "CommonJS",
+        "noImplicitThis": true,
+        "noImplicitReturns": true,
+        "noUnusedLocals": true,
+        "strictNullChecks": true,
+        "noImplicitAny": true,
+        "noUnusedParameters": true
+    },
+    "files": [
+        "src/compiler/parser/parser.ts",
+        "src/compiler/parser/scanner.ts"
+    ]
+}

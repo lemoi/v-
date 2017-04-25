@@ -1,0 +1,13 @@
+<Button type: string = 'default'
+        size: string = 'md'
+        disabled: boolean = false
+        on_click: function>
+    <button class=[
+                'btn',
+                'btn-' + type,
+                'btn-' + size,
+                disabled ? 'disabled' : '']
+            @click=on_click>
+        #{_}
+    </button>
+</Button>

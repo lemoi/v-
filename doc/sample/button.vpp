@@ -1,0 +1,44 @@
+#import "/i"
+#cmt
+    ppp
+#end
+<Button type: string = 'default'
+        size: string = 'md'
+        disabled: boolean = false
+        click: function>
+    <style>
+        .btn {
+            display: inline-block;
+            font-weight: normal;
+            line-height: 1.25;
+            text-align: center;
+            border: 1px solid transparent;
+            padding: 0.5rem 1rem;
+            font-size: 1rem;
+            border-radius: 0.25rem;
+            transition: all 0.2s ease-in-out;
+        }
+        .btn-lg {
+            padding: 0.75rem 1.5rem;
+            font-size: 1.25rem;
+            border-radius: 0.3rem;
+        }
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.875rem;
+            border-radius: 0.2rem;
+        }
+    </style>
+    <button class=[
+                'btn',
+                'btn-' + type,
+                'btn-' + size,
+                disabled ? 'disabled' : '']
+            @click = click>
+        <i>--**--</i>
+    </button>
+    <script>
+        _.argv['type']
+        _.data['a'] = _.argv['a'];
+    </script>
+</Button>
